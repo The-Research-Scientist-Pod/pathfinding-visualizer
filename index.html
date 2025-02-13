@@ -1,13 +1,94 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="https://researchdatapod.com/wp-content/uploads/2020/10/logo_transparent_background.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pathfinding Visualizer - Interactive Algorithm Visualization Tool</title>
+  <meta name="description" content="Interactive visualization tool for pathfinding algorithms including Dijkstra's, A*, Breadth-First Search and more. Features adjustable speed, maze generation, and interactive grid controls." />
+  <meta property="og:title" content="Pathfinding Visualizer - Interactive Algorithm Visualization Tool" />
+  <meta property="og:description" content="Interactive visualization tool for pathfinding algorithms including Dijkstra's, A*, Breadth-First Search and more. Features adjustable speed, maze generation, and interactive grid controls." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pathfinding-visualizer.researchdatapod.com/" />
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Pathfinding Visualizer",
+      "description": "Interactive visualization tool for pathfinding algorithms including Dijkstra's, A*, Breadth-First Search and more. Features adjustable speed, maze generation, and interactive grid controls.",
+      "url": "https://pathfinding-visualizer.researchdatapod.com/",
+      "applicationCategory": "EducationalApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Multiple pathfinding algorithm visualizations",
+        "Interactive grid and wall placement",
+        "Maze generation",
+        "Dark/Light mode",
+        "Real-time visualization"
+      ],
+      "publisher": {
+        "@type": "Organization",
+        "name": "The Research Scientist Pod",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://researchdatapod.com/wp-content/uploads/2020/10/logo_transparent_background.png"
+        }
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Research Scientist Pod",
+        "url": "https://researchdatapod.com/"
+      }
+    }
+  </script>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
+<style>
+  :root {
+    --footer-bg: rgba(255, 255, 255, 0.9);
+    --footer-text: #000;
+    --footer-link: #b03b5a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --footer-bg: rgba(0, 0, 0, 0.9);
+      --footer-text: #fff;
+      --footer-link: #ff8aa6;
+    }
+  }
+  .adaptive-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    background: var(--footer-bg);
+    color: var(--footer-text);
+  }
+  .adaptive-footer p {
+    margin: 0;
+    font-size: 0.9em;
+  }
+  .adaptive-footer a {
+    color: var(--footer-link);
+    text-decoration: none;
+  }
+  .adaptive-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
+<footer class="adaptive-footer" aria-label="Project links">
+  <p>
+    <a href="https://github.com/The-Research-Scientist-Pod/pathfinding-visualizer" target="_blank" rel="noopener" aria-label="View pathfinding visualizer source code on GitHub">source code on GitHub</a>
+    <span aria-hidden="true"> | </span>
+    <a href="https://researchdatapod.com/dsa/" target="_blank" rel="noopener" aria-label="Read Data Structures and Algorithms tutorials on the Research Scientist Pod website">DSA tutorials on the Research Scientist Pod website</a>
+  </p>
+</footer>
+</body>
 </html>
