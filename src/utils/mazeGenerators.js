@@ -280,39 +280,68 @@ export const basicRandomMaze = async (grid, setGrid, setIsGenerating) => {
 export const circularMaze = async (grid, setGrid, setIsGenerating) => {
     setIsGenerating(true);
     const newGrid = initializeMazeGrid(grid);
-    const centerRow = Math.floor(GRID_SETTINGS.ROWS / 2);
-    const centerCol = Math.floor(GRID_SETTINGS.COLS / 2);
-    const maxRadius = Math.min(centerRow, centerCol) - 1;
+    
+    // Start from the outer edges and work inward
+    const layers = Math.min(
+        Math.floor(GRID_SETTINGS.ROWS / 2),
+        Math.floor(GRID_SETTINGS.COLS / 2)
+    ) - 1;
 
-    for (let radius = 2; radius <= maxRadius; radius += 2) {
-        const angleStep = 0.1;
-        const points = new Set();
+    // Create outer border
+    await addOuterWalls(newGrid, setGrid);
 
-        // Draw circle
-        for (let angle = 0; angle < 2 * Math.PI; angle += angleStep) {
-            const row = Math.round(centerRow + radius * Math.cos(angle));
-            const col = Math.round(centerCol + radius * Math.sin(angle));
-            const key = `${row},${col}`;
+    for (let layer = 0; layer < layers; layer++) {
+        // Define the boundaries for this layer
+        const startRow = layer + 1;
+        const endRow = GRID_SETTINGS.ROWS - layer - 2;
+        const startCol = layer + 1;
+        const endCol = GRID_SETTINGS.COLS - layer - 2;
 
-            if (!points.has(key) && isValidCell(row, col) &&
-                !grid[row][col].isStart && !grid[row][col].isFinish) {
-                points.add(key);
-                await animateWallCreation(newGrid, row, col, setGrid);
-                newGrid[row][col].isWall = true;
+        // Create walls for this layer with a snake-like pattern
+        if (layer % 2 === 0) {
+            // Create horizontal walls
+            for (let col = startCol; col <= endCol; col++) {
+                if (!newGrid[startRow][col].isStart && !newGrid[startRow][col].isFinish) {
+                    await animateWallCreation(newGrid, startRow, col, setGrid);
+                    newGrid[startRow][col].isWall = true;
+                }
+                if (!newGrid[endRow][col].isStart && !newGrid[endRow][col].isFinish) {
+                    await animateWallCreation(newGrid, endRow, col, setGrid);
+                    newGrid[endRow][col].isWall = true;
+                }
             }
-        }
-
-        // Create passages
-        const numPassages = Math.max(2, Math.floor(radius));
-        for (let i = 0; i < numPassages; i++) {
-            const angle = (2 * Math.PI * i) / numPassages;
-            const row = Math.round(centerRow + radius * Math.cos(angle));
-            const col = Math.round(centerCol + radius * Math.sin(angle));
-
-            if (isValidCell(row, col)) {
-                newGrid[row][col].isWall = false;
-                setGrid([...newGrid]);
+            // Create vertical walls
+            for (let row = startRow; row <= endRow; row++) {
+                if (!newGrid[row][startCol].isStart && !newGrid[row][startCol].isFinish) {
+                    await animateWallCreation(newGrid, row, startCol, setGrid);
+                    newGrid[row][startCol].isWall = true;
+                }
+                if (!newGrid[row][endCol].isStart && !newGrid[row][endCol].isFinish) {
+                    await animateWallCreation(newGrid, row, endCol, setGrid);
+                    newGrid[row][endCol].isWall = true;
+                }
             }
+
+            // Create passages (one in each wall)
+            const passages = [
+                { row: startRow, col: startCol + Math.floor(Math.random() * (endCol - startCol)) },
+                { row: endRow, col: startCol + Math.floor(Math.random() * (endCol - startCol)) },
+                { row: startRow + Math.floor(Math.random() * (endRow - startRow)), col: startCol },
+                { row: startRow + Math.floor(Math.random() * (endRow - startRow)), col: endCol }
+            ];
+
+            // Ensure at least one passage is created
+            const randomPassage = passages[Math.floor(Math.random() * passages.length)];
+            newGrid[randomPassage.row][randomPassage.col].isWall = false;
+            setGrid([...newGrid]);
+
+            // Randomly add more passages
+            passages.forEach(passage => {
+                if (Math.random() < 0.3) {
+                    newGrid[passage.row][passage.col].isWall = false;
+                    setGrid([...newGrid]);
+                }
+            });
         }
     }
 
