@@ -1,12 +1,12 @@
 // gridUtils.js
 
 export const GRID_SETTINGS = {
-    ROWS: 20,
-    COLS: 30,
-    START_NODE_ROW: 10,
-    START_NODE_COL: 5,
-    FINISH_NODE_ROW: 10,
-    FINISH_NODE_COL: 25,
+    ROWS: 21,     // Must be odd number
+    COLS: 51,     // Must be odd number
+    START_NODE_ROW: 1,
+    START_NODE_COL: 1,
+    FINISH_NODE_ROW: 19,  // ROWS - 2
+    FINISH_NODE_COL: 49   // COLS - 2
 };
 
 // Validate coordinates are within grid bounds

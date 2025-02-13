@@ -1,16 +1,11 @@
-// PathfindingVisualizer.jsx
 import React, { useState, useCallback } from 'react';
-import { getInitialGrid, getNewGridWithWallToggled, getNodesInShortestPath } from '../utils/gridUtils';
+import { getInitialGrid, getNewGridWithWallToggled, getNodesInShortestPath, GRID_SETTINGS } from '../utils/gridUtils';
 import { dijkstra } from '../algorithms/dijkstra';
 import { astar } from '../algorithms/astar';
-import {
-  MAZE_TYPES,
-  recursiveDivision,
-  recursiveDivisionVertical,
-  recursiveDivisionHorizontal,
-  basicRandomMaze,
-  circularMaze
-} from '../utils/mazeGenerators';
+import { breadthFirstSearch } from '../algorithms/breadthFirst';
+import { depthFirstSearch } from '../algorithms/depthFirst';
+import { bellmanFord } from '../algorithms/bellmanFord';
+import { MAZE_TYPES, backtrackingMaze } from '../utils/mazeGenerators';
 import Grid from './Grid';
 import Legend from './Legend';
 
@@ -24,7 +19,6 @@ const PathfindingVisualizer = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [algorithm, setAlgorithm] = useState('dijkstra');
-  const [mazeType, setMazeType] = useState(MAZE_TYPES.RECURSIVE_DIVISION);
 
   const handleMouseDown = (row, col) => {
     if (isRunning || isGenerating) return;
@@ -60,19 +54,25 @@ const PathfindingVisualizer = () => {
   };
 
   const animatePath = async (visitedNodesInOrder, nodesInPath) => {
-    for (const node of nodesInPath) {
+    // Batch nodes in groups of 3 for faster animation
+    for (let i = 0; i < nodesInPath.length; i += 3) {
       await new Promise(resolve => {
         setTimeout(() => {
           setGrid(grid => {
             const newGrid = grid.map(row => [...row]);
-            newGrid[node.row][node.col] = {
-              ...newGrid[node.row][node.col],
-              isPath: true,
-            };
+            // Update multiple nodes at once
+            for (let j = i; j < Math.min(i + 3, nodesInPath.length); j++) {
+              const node = nodesInPath[j];
+              newGrid[node.row][node.col] = {
+                ...newGrid[node.row][node.col],
+                isPath: true,
+                className: 'node-shortest-path'
+              };
+            }
             return newGrid;
           });
           resolve();
-        }, 60);
+        }, 10); // Reduced from 60ms to 20ms
       });
     }
   };
@@ -105,25 +105,7 @@ const PathfindingVisualizer = () => {
     setGrid(getInitialGrid());
 
     try {
-      switch (mazeType) {
-        case MAZE_TYPES.RECURSIVE_DIVISION:
-          await recursiveDivision(grid, setGrid, setIsGenerating);
-          break;
-        case MAZE_TYPES.RECURSIVE_VERTICAL:
-          await recursiveDivisionVertical(grid, setGrid, setIsGenerating);
-          break;
-        case MAZE_TYPES.RECURSIVE_HORIZONTAL:
-          await recursiveDivisionHorizontal(grid, setGrid, setIsGenerating);
-          break;
-        case MAZE_TYPES.BASIC_RANDOM:
-          await basicRandomMaze(grid, setGrid, setIsGenerating);
-          break;
-        case MAZE_TYPES.CIRCULAR:
-          await circularMaze(grid, setGrid, setIsGenerating);
-          break;
-        default:
-          await recursiveDivision(grid, setGrid, setIsGenerating);
-      }
+      await backtrackingMaze(grid, setGrid, setIsGenerating);
     } catch (error) {
       console.error('Error generating maze:', error);
       setIsGenerating(false);
@@ -136,12 +118,31 @@ const PathfindingVisualizer = () => {
     setIsRunning(true);
 
     try {
-      const visitedNodesInOrder = await (algorithm === 'dijkstra'
-          ? dijkstra(grid, animateNode)
-          : astar(grid, animateNode));
+      let visitedNodesInOrder;
+
+      switch (algorithm) {
+        case 'dijkstra':
+          visitedNodesInOrder = await dijkstra(grid, animateNode);
+          break;
+        case 'astar':
+          visitedNodesInOrder = await astar(grid, animateNode);
+          break;
+        case 'bfs':
+          visitedNodesInOrder = await breadthFirstSearch(grid, animateNode);
+          break;
+        case 'dfs':
+          visitedNodesInOrder = await depthFirstSearch(grid, animateNode);
+          break;
+        case 'bellmanFord':
+          visitedNodesInOrder = await bellmanFord(grid, animateNode);
+          break;
+        default:
+          visitedNodesInOrder = await dijkstra(grid, animateNode);
+      }
 
       if (visitedNodesInOrder.length > 0) {
-        await animatePath(visitedNodesInOrder, getNodesInShortestPath(grid[10][25]));
+        const { FINISH_NODE_ROW, FINISH_NODE_COL } = GRID_SETTINGS;
+        await animatePath(visitedNodesInOrder, getNodesInShortestPath(grid[FINISH_NODE_ROW][FINISH_NODE_COL]));
       }
     } catch (error) {
       console.error('Error during visualization:', error);
@@ -161,20 +162,10 @@ const PathfindingVisualizer = () => {
                 disabled={isRunning || isGenerating}
             >
               <option value="dijkstra">Dijkstra's Algorithm</option>
-              <option value="astar">A* Algorithm</option>
-            </select>
-
-            <select
-                className="px-4 py-2 rounded border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={mazeType}
-                onChange={(e) => setMazeType(e.target.value)}
-                disabled={isRunning || isGenerating}
-            >
-              <option value={MAZE_TYPES.RECURSIVE_DIVISION}>Recursive Division</option>
-              <option value={MAZE_TYPES.RECURSIVE_VERTICAL}>Recursive Division (Vertical)</option>
-              <option value={MAZE_TYPES.RECURSIVE_HORIZONTAL}>Recursive Division (Horizontal)</option>
-              <option value={MAZE_TYPES.BASIC_RANDOM}>Basic Random Maze</option>
-              <option value={MAZE_TYPES.CIRCULAR}>Circular Maze</option>
+              <option value="astar">A* Search</option>
+              <option value="bfs">Breadth First Search</option>
+              <option value="dfs">Depth First Search</option>
+              <option value="bellmanFord">Bellman-Ford</option>
             </select>
           </div>
 
@@ -184,7 +175,7 @@ const PathfindingVisualizer = () => {
                 onClick={generateMaze}
                 disabled={isRunning || isGenerating}
             >
-              {isGenerating ? 'Generating...' : 'Generate Maze'}
+              {isGenerating ? 'Generating Maze...' : 'Generate Maze'}
             </button>
 
             <button
@@ -192,7 +183,7 @@ const PathfindingVisualizer = () => {
                 onClick={visualize}
                 disabled={isRunning || isGenerating}
             >
-              {isRunning ? 'Visualizing...' : 'Visualize Pathfinding'}
+              {isRunning ? 'Finding Path...' : 'Find Path'}
             </button>
 
             <button

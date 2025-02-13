@@ -9,18 +9,14 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.node:hover {
-    transform: scale(1.15);
-    z-index: 10;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.node.isDrawing {
+    animation: drawPath 0.3s ease-out forwards;
 }
 
-.node:active {
-    transform: scale(0.95);
-}
-
-.node.drawing {
-    animation: drawWall 0.3s ease-out forwards;
+/* Updated: Animation for active path during generation to be black */
+.node-path {
+    background-color: #1f2937 !important;
+    animation: mazeGeneration 1s infinite;
 }
 
 .node-wall {
@@ -28,100 +24,90 @@
     transform: scale(0.95);
 }
 
-.node-wall.drawing {
-    animation: drawWall 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
 .node-start {
     background-color: #22c55e;
-    animation: pulse 2s infinite;
 }
 
 .node-finish {
     background-color: #ef4444;
-    animation: pulse 2s infinite;
 }
 
 .node-visited {
-    animation: visit 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: visitNode 0.5s ease-out forwards;
 }
 
-.node-path {
-    animation: pathAnim 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+/* Shortest path animation with glowing effect */
+.node-shortest-path {
+    animation: shortestPath 0.3s ease-out forwards; /* Reduced from 0.5s to 0.3s */
+    position: relative;
 }
 
-@keyframes drawWall {
+/* Updated: Maze generation animation with box shadow */
+@keyframes mazeGeneration {
     0% {
-        transform: scale(0.3);
-        background-color: #9CA3AF;
-        box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+        transform: scale(1);
+        box-shadow: 0 0 8px rgba(31, 41, 55, 0.4);
     }
     50% {
-        transform: scale(1.2);
-        background-color: #4B5563;
-        box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-    }
-    75% {
-        transform: scale(0.9);
-        background-color: #374151;
-        box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+        transform: scale(1.1);
+        box-shadow: 0 0 12px rgba(31, 41, 55, 0.6);
     }
     100% {
         transform: scale(1);
-        background-color: #1F2937;
-        box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 0 8px rgba(31, 41, 55, 0.4);
     }
 }
 
-@keyframes visit {
+/* Updated: Drawing animation in black */
+@keyframes drawPath {
     0% {
         transform: scale(0.3);
-        background-color: rgba(96, 165, 250, 0.1);
+        background-color: #1f2937;
+        box-shadow: 0 0 8px rgba(31, 41, 55, 0.4);
     }
     50% {
         transform: scale(1.2);
-        background-color: rgba(96, 165, 250, 0.7);
-    }
-    75% {
-        transform: scale(0.9);
-        background-color: rgba(96, 165, 250, 0.9);
+        background-color: #1f2937;
+        box-shadow: 0 0 12px rgba(31, 41, 55, 0.6);
     }
     100% {
         transform: scale(1);
-        background-color: rgba(96, 165, 250, 0.8);
+        background-color: white;
+        box-shadow: none;
     }
 }
 
-@keyframes pathAnim {
+/* Enhanced shortest path animation */
+@keyframes shortestPath {
     0% {
         transform: scale(0.6);
         background-color: #facc15;
-    }
-    50% {
-        transform: scale(1.3);
-        background-color: #facc15;
+        box-shadow: 0 0 10px #fef08a;
     }
     75% {
-        transform: scale(0.9);
+        transform: scale(1.1);
         background-color: #facc15;
+        box-shadow: 0 0 15px #fef08a;
     }
     100% {
         transform: scale(1);
         background-color: #facc15;
+        box-shadow: 0 0 10px #fef08a;
     }
 }
 
-@keyframes pulse {
+/* Node visit animation for pathfinding */
+@keyframes visitNode {
     0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+        transform: scale(0.3);
+        background-color: rgba(147, 197, 253, 0.75);
     }
-    70% {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+    50% {
+        transform: scale(1.2);
+        background-color: rgba(96, 165, 250, 0.75);
     }
     100% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        background-color: rgba(59, 130, 246, 0.75);
     }
 }

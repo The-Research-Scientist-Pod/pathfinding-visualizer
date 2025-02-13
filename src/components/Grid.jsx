@@ -9,16 +9,10 @@ const Grid = ({ grid, onMouseDown, onMouseEnter, onMouseUp }) => {
         if (node.isFinish) return `${baseClass} node-finish`;
         if (node.isStart) return `${baseClass} node-start`;
         if (node.isWall) return `${baseClass} node-wall`;
-        if (node.isPath) return `${baseClass} node-path`;
+        if (node.isPath) return `${baseClass} node-shortest-path`;  // Updated class name
         if (node.isVisited) return `${baseClass} node-visited`;
         return baseClass;
     };
-
-    // Add a check to ensure grid is an array
-    if (!Array.isArray(grid)) {
-        console.error('Grid prop is not an array:', grid);
-        return null;
-    }
 
     return (
         <div
