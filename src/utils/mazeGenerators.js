@@ -322,25 +322,81 @@ export const circularMaze = async (grid, setGrid, setIsGenerating) => {
                 }
             }
 
-            // Create passages (one in each wall)
-            const passages = [
-                { row: startRow, col: startCol + Math.floor(Math.random() * (endCol - startCol)) },
-                { row: endRow, col: startCol + Math.floor(Math.random() * (endCol - startCol)) },
-                { row: startRow + Math.floor(Math.random() * (endRow - startRow)), col: startCol },
-                { row: startRow + Math.floor(Math.random() * (endRow - startRow)), col: endCol }
-            ];
-
-            // Ensure at least one passage is created
-            const randomPassage = passages[Math.floor(Math.random() * passages.length)];
-            newGrid[randomPassage.row][randomPassage.col].isWall = false;
-            setGrid([...newGrid]);
-
-            // Randomly add more passages
-            passages.forEach(passage => {
-                if (Math.random() < 0.3) {
-                    newGrid[passage.row][passage.col].isWall = false;
-                    setGrid([...newGrid]);
+            // Create internal walls for additional complexity
+            if (endRow - startRow > 3 && endCol - startCol > 3) {
+                const midRow = Math.floor((startRow + endRow) / 2);
+                const midCol = Math.floor((startCol + endCol) / 2);
+                
+                // Add some internal walls in a cross pattern
+                for (let i = startCol + 1; i < endCol; i += 2) {
+                    if (!newGrid[midRow][i].isStart && !newGrid[midRow][i].isFinish 
+                        && Math.random() < 0.7) {
+                        await animateWallCreation(newGrid, midRow, i, setGrid);
+                        newGrid[midRow][i].isWall = true;
+                    }
                 }
+                
+                for (let i = startRow + 1; i < endRow; i += 2) {
+                    if (!newGrid[i][midCol].isStart && !newGrid[i][midCol].isFinish 
+                        && Math.random() < 0.7) {
+                        await animateWallCreation(newGrid, i, midCol, setGrid);
+                        newGrid[i][midCol].isWall = true;
+                    }
+                }
+            }
+
+            // Create strategic passages (fewer than before)
+            const passages = [];
+            
+            // Add one passage per wall, but with strategic positioning
+            if (Math.random() < 0.8) { // 80% chance for top wall passage
+                passages.push({ 
+                    row: startRow, 
+                    col: startCol + Math.floor((endCol - startCol) * (Math.random() < 0.5 ? 0.25 : 0.75))
+                });
+            }
+            if (Math.random() < 0.8) { // 80% chance for bottom wall passage
+                passages.push({ 
+                    row: endRow, 
+                    col: startCol + Math.floor((endCol - startCol) * (Math.random() < 0.5 ? 0.25 : 0.75))
+                });
+            }
+            if (Math.random() < 0.8) { // 80% chance for left wall passage
+                passages.push({ 
+                    row: startRow + Math.floor((endRow - startRow) * (Math.random() < 0.5 ? 0.25 : 0.75)),
+                    col: startCol 
+                });
+            }
+            if (Math.random() < 0.8) { // 80% chance for right wall passage
+                passages.push({ 
+                    row: startRow + Math.floor((endRow - startRow) * (Math.random() < 0.5 ? 0.25 : 0.75)),
+                    col: endCol 
+                });
+            }
+
+            // Ensure at least one passage exists
+            if (passages.length === 0) {
+                const wall = Math.floor(Math.random() * 4);
+                switch(wall) {
+                    case 0:
+                        passages.push({ row: startRow, col: startCol + Math.floor((endCol - startCol) / 2) });
+                        break;
+                    case 1:
+                        passages.push({ row: endRow, col: startCol + Math.floor((endCol - startCol) / 2) });
+                        break;
+                    case 2:
+                        passages.push({ row: startRow + Math.floor((endRow - startRow) / 2), col: startCol });
+                        break;
+                    case 3:
+                        passages.push({ row: startRow + Math.floor((endRow - startRow) / 2), col: endCol });
+                        break;
+                }
+            }
+
+            // Create the passages
+            passages.forEach(passage => {
+                newGrid[passage.row][passage.col].isWall = false;
+                setGrid([...newGrid]);
             });
         }
     }
