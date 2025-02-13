@@ -102,7 +102,7 @@ const PathfindingVisualizer = () => {
 
   const generateMaze = async () => {
     if (isRunning || isGenerating) return;
-    clearPath();
+    setGrid(getInitialGrid());
 
     try {
       switch (mazeType) {
