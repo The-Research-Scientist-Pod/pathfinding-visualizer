@@ -209,7 +209,7 @@ const PathfindingVisualizer = () => {
       <div className="min-h-screen flex flex-col bg-gray-50">
         <main className="flex-1 container mx-auto px-2 py-2 flex flex-col">
           {/* Controls Section */}
-          
+
           <div className={`flex ${isLandscape ? 'flex-row' : 'flex-col'} items-center justify-center gap-2 p-2 bg-white rounded-lg shadow-sm mb-2`}>
             <select
                 className="px-2 py-1 text-sm rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
