@@ -250,31 +250,36 @@ const PathfindingVisualizer = () => {
           </div>
 
           {/* Stats Section */}
-          <div className={`flex ${isLandscape ? 'flex-row' : 'flex-nowrap overflow-x-auto'} items-center justify-start gap-4 p-2 bg-white rounded-lg shadow-sm mb-2`}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-row flex-wrap items-center justify-center gap-2 p-2 bg-white rounded-lg shadow-sm mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Algorithm:</span>
-              <span className="text-sm font-medium">
-              {stats.algorithm === 'dijkstra' ? "Dijkstra's" :
-                  stats.algorithm === 'astar' ? "A*" :
-                      stats.algorithm === 'bfs' ? "BFS" :
-                          stats.algorithm === 'dfs' ? "DFS" :
-                              "Bellman-Ford"}
-            </span>
+              <span className="text-xs sm:text-sm text-gray-600">Algorithm:</span>
+              <span className="text-xs sm:text-sm font-medium">
+            {stats.algorithm === 'dijkstra' ? "Dijkstra's" :
+                stats.algorithm === 'astar' ? "A*" :
+                    stats.algorithm === 'bfs' ? "BFS" :
+                        stats.algorithm === 'dfs' ? "DFS" :
+                            "Bellman-Ford"}
+        </span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Nodes:</span>
-              <span className="text-sm font-medium">{isRunning ? "..." : stats.nodesVisited || 0}</span>
+              <span className="text-xs sm:text-sm text-gray-600">Nodes:</span>
+              <span className="text-xs sm:text-sm font-medium">{isRunning ? "..." : stats.nodesVisited || 0}</span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Path:</span>
-              <span className="text-sm font-medium">{isRunning ? "..." : stats.pathLength || 0}</span>
+              <span className="text-xs sm:text-sm text-gray-600">Path:</span>
+              <span className="text-xs sm:text-sm font-medium">{isRunning ? "..." : stats.pathLength || 0}</span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Time:</span>
-              <span className="text-sm font-medium">{isRunning ? "..." : `${stats.executionTime || 0}ms`}</span>
+              <span className="text-xs sm:text-sm text-gray-600">Time:</span>
+              <span className="text-xs sm:text-sm font-medium">{isRunning ? "..." : `${stats.executionTime || 0}ms`}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm text-gray-600">Memory:</span>
+              <span className="text-xs sm:text-sm font-medium">{isRunning ? "..." : `${stats.memoryUsed || 0}`}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm text-gray-600">Manhattan:</span>
+              <span className="text-xs sm:text-sm font-medium">{isRunning ? "..." : stats.manhattanDistance || 0}</span>
             </div>
           </div>
 
