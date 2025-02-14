@@ -6,59 +6,50 @@ const Grid = ({ grid, onMouseDown, onMouseEnter, onMouseUp, isLandscape }) => {
     const [touchStarted, setTouchStarted] = useState(false);
 
     const calculateCellSize = useCallback(() => {
-        // Adjust these values based on your header and padding sizes
-        const headerHeight = 220; // Increased to account for all UI elements
-        const padding = 32; // Consistent padding
+        // Get viewport dimensions
+        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+        const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
 
-        // Get available space
-        const availableWidth = Math.min(window.innerWidth - padding * 2, 1200); // Max width cap
-        const availableHeight = window.innerHeight - headerHeight;
+        // Much larger margins and header space for mobile
+        const headerHeight = isLandscape ? 180 : 280; // Increased header space
+        const SIDE_MARGIN = isLandscape ? 40 : 32;
 
-        // Calculate cell size based on grid dimensions
-        const cellByWidth = (availableWidth - padding) / GRID_SETTINGS.COLS;
-        const cellByHeight = (availableHeight - padding) / GRID_SETTINGS.ROWS;
+        // Calculate available space with larger margins
+        const availableWidth = vw - (SIDE_MARGIN * 2);
+        const availableHeight = vh - headerHeight - (SIDE_MARGIN * 2);
 
-        // Use the smaller value to ensure entire grid fits
-        const size = Math.floor(Math.min(cellByWidth, cellByHeight));
+        // Calculate cell size ensuring grid fits in available space
+        const widthBasedSize = (availableWidth * 0.95) / GRID_SETTINGS.COLS; // 95% of available width
+        const heightBasedSize = (availableHeight * 0.95) / GRID_SETTINGS.ROWS; // 95% of available height
 
-        // Clamp the size between minimum and maximum values
-        return Math.max(10, Math.min(size, 30)); // Adjusted min/max sizes
-    }, []);
+        // Use the smaller value and enforce size limits
+        let size = Math.min(widthBasedSize, heightBasedSize);
+
+        // Stricter size limits for mobile
+        const maxSize = isLandscape ? 20 : 12;
+        const minSize = isLandscape ? 10 : 6;
+
+        return Math.floor(Math.max(minSize, Math.min(size, maxSize)));
+    }, [isLandscape]);
 
     useEffect(() => {
         const handleResize = () => {
-            setCellSize(calculateCellSize());
+            requestAnimationFrame(() => {
+                setCellSize(calculateCellSize());
+            });
         };
 
         handleResize();
         window.addEventListener('resize', handleResize);
-        window.addEventListener('orientationchange', handleResize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(handleResize, 100);
+        });
 
         return () => {
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('orientationchange', handleResize);
         };
     }, [calculateCellSize]);
-
-    // Touch event handlers
-    const handleTouchStart = (rowIdx, nodeIdx, e) => {
-        e.preventDefault();
-        setTouchStarted(true);
-        onMouseDown(rowIdx, nodeIdx);
-    };
-
-    const handleTouchMove = (rowIdx, nodeIdx, e) => {
-        e.preventDefault();
-        if (touchStarted) {
-            onMouseEnter(rowIdx, nodeIdx);
-        }
-    };
-
-    const handleTouchEnd = (e) => {
-        e.preventDefault();
-        setTouchStarted(false);
-        onMouseUp();
-    };
 
     const getNodeClassName = (node) => {
         const baseClasses = "transition-colors duration-200";
@@ -72,31 +63,62 @@ const Grid = ({ grid, onMouseDown, onMouseEnter, onMouseUp, isLandscape }) => {
         return `${baseClasses} bg-white hover:bg-gray-100`;
     };
 
-    const gridStyle = {
-        display: 'grid',
-        gridTemplateColumns: `repeat(${GRID_SETTINGS.COLS}, ${cellSize}px)`,
-        gap: '1px',
-        padding: '4px',
-        backgroundColor: '#e5e7eb',
-        margin: '0 auto',
-        border: '2px solid #d1d5db',
-        borderRadius: '0.5rem',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        minWidth: 'min-content', // Ensures grid doesn't shrink below content size
+    const handleTouchStart = (rowIdx, nodeIdx, e) => {
+        e.preventDefault();
+        setTouchStarted(true);
+        onMouseDown(rowIdx, nodeIdx);
+    };
+
+    const handleTouchMove = (rowIdx, nodeIdx, e) => {
+        e.preventDefault();
+        if (touchStarted) {
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element) {
+                const cellCoords = element.getAttribute('data-cell');
+                if (cellCoords) {
+                    const [row, col] = cellCoords.split('-').map(Number);
+                    onMouseEnter(row, col);
+                }
+            }
+        }
+    };
+
+    const handleTouchEnd = (e) => {
+        e.preventDefault();
+        setTouchStarted(false);
+        onMouseUp();
     };
 
     return (
-        <div className="w-full overflow-auto flex justify-center items-center p-2">
-            <div style={gridStyle}>
+        <div className="w-full flex justify-center items-center px-5 py-5">
+            <div
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${GRID_SETTINGS.COLS}, ${cellSize}px)`,
+                    gap: '1px',
+                    padding: '4px',
+                    backgroundColor: '#e5e7eb',
+                    border: '2px solid #d1d5db',
+                    borderRadius: '0.5rem',
+                    touchAction: 'none',
+                    WebkitTouchCallout: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none',
+                    msUserSelect: 'none',
+                    userSelect: 'none',
+                }}
+                className="shadow-lg"
+            >
                 {grid.map((row, rowIdx) =>
                     row.map((node, nodeIdx) => (
                         <div
                             key={`${rowIdx}-${nodeIdx}`}
+                            data-cell={`${rowIdx}-${nodeIdx}`}
                             className={getNodeClassName(node)}
                             style={{
                                 width: `${cellSize}px`,
                                 height: `${cellSize}px`,
-                                touchAction: 'none',
                             }}
                             onMouseDown={() => onMouseDown(rowIdx, nodeIdx)}
                             onMouseEnter={() => onMouseEnter(rowIdx, nodeIdx)}
