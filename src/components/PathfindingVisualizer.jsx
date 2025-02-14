@@ -1,21 +1,19 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { getInitialGrid, getNewGridWithWallToggled, getNodesInShortestPath, GRID_SETTINGS } from '../utils/gridUtils';
 import { dijkstra } from '../algorithms/dijkstra';
 import { astar } from '../algorithms/astar';
 import { breadthFirstSearch } from '../algorithms/breadthFirst';
 import { depthFirstSearch } from '../algorithms/depthFirst';
 import { bellmanFord } from '../algorithms/bellmanFord';
-import { MAZE_TYPES, backtrackingMaze } from '../utils/mazeGenerators';
+import { backtrackingMaze } from '../utils/mazeGenerators';
 import Grid from './Grid';
-import Legend from './Legend';
-import Stats from './Stats';
 
 const PathfindingVisualizer = () => {
-  const [grid, setGrid] = useState(() => {
-    const initialGrid = getInitialGrid();
-    console.log('Initial grid created:', initialGrid);
-    return initialGrid;
-  });
+  // Orientation detection
+  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+
+  // Basic state
+  const [grid, setGrid] = useState(() => getInitialGrid());
   const [isMousePressed, setIsMousePressed] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -27,21 +25,36 @@ const PathfindingVisualizer = () => {
     pathLength: 0,
     executionTime: 0,
     memoryUsed: 0,
-    pathEfficiency: 0
+    pathEfficiency: 0,
+    manhattanDistance: 0
   });
-  // Get animation delays based on speed
+
+  // Handle orientation changes
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
+  // Animation speed settings
   const getAnimationDelays = () => {
     switch (speed) {
-      case 'veryfast':
-        return { visit: 5, path: 10 };
-      case 'fast':
-        return { visit: 10, path: 20 };
-      case 'slow':
-        return { visit: 50, path: 100 };
-      default: // normal
-        return { visit: 30, path: 60 };
+      case 'veryfast': return { visit: 5, path: 10 };
+      case 'fast': return { visit: 10, path: 20 };
+      case 'slow': return { visit: 50, path: 100 };
+      default: return { visit: 30, path: 60 };
     }
   };
+
+  // Mouse event handlers
   const handleMouseDown = (row, col) => {
     if (isRunning || isGenerating) return;
     const newGrid = getNewGridWithWallToggled(grid, row, col);
@@ -59,6 +72,7 @@ const PathfindingVisualizer = () => {
     setIsMousePressed(false);
   };
 
+  // Animation functions
   const animateNode = async (node) => {
     const { visit } = getAnimationDelays();
     return new Promise(resolve => {
@@ -99,6 +113,7 @@ const PathfindingVisualizer = () => {
     }
   };
 
+  // Grid manipulation functions
   const handleSpeedChange = (newSpeed) => {
     setSpeed(newSpeed);
   };
@@ -106,6 +121,15 @@ const PathfindingVisualizer = () => {
   const resetGrid = useCallback(() => {
     if (isRunning || isGenerating) return;
     setGrid(getInitialGrid());
+    setStats({
+      algorithm: 'dijkstra',
+      nodesVisited: 0,
+      pathLength: 0,
+      executionTime: 0,
+      memoryUsed: 0,
+      pathEfficiency: 0,
+      manhattanDistance: 0
+    });
   }, [isRunning, isGenerating]);
 
   const clearPath = () => {
@@ -129,7 +153,6 @@ const PathfindingVisualizer = () => {
   const generateMaze = async () => {
     if (isRunning || isGenerating) return;
     setGrid(getInitialGrid());
-
     try {
       await backtrackingMaze(grid, setGrid, setIsGenerating);
     } catch (error) {
@@ -164,8 +187,10 @@ const PathfindingVisualizer = () => {
         default:
           result = await dijkstra(grid, animateNode);
       }
+
       const { visitedNodesInOrder, stats: newStats } = result;
       setStats({ ...newStats, algorithm });
+
       if (visitedNodesInOrder.length > 0) {
         const { FINISH_NODE_ROW, FINISH_NODE_COL } = GRID_SETTINGS;
         await animatePath(
@@ -180,13 +205,11 @@ const PathfindingVisualizer = () => {
     }
   };
 
-// PathfindingVisualizer.jsx
-// PathfindingVisualizer.jsx
   return (
-      <div className="min-h-screen flex flex-col">
-        <main className="flex-1 container mx-auto px-4 py-4 flex flex-col">
-          {/* Main controls row */}
-          <div className="flex items-center justify-center gap-4 p-2 bg-white rounded-lg shadow-sm mb-2">
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <main className={`flex-1 container mx-auto px-2 py-2 flex flex-col ${isLandscape ? 'landscape' : 'portrait'}`}>
+          {/* Controls Section */}
+          <div className={`flex ${isLandscape ? 'flex-row' : 'flex-col'} items-center justify-center gap-2 p-2 bg-white rounded-lg shadow-sm mb-2`}>
             <select
                 className="px-2 py-1 text-sm rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={algorithm}
@@ -199,8 +222,6 @@ const PathfindingVisualizer = () => {
               <option value="dfs">DFS</option>
               <option value="bellmanFord">Bellman-Ford</option>
             </select>
-
-            <div className="h-4 w-px bg-gray-200" />
 
             <button
                 className="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
@@ -227,8 +248,8 @@ const PathfindingVisualizer = () => {
             </button>
           </div>
 
-          {/* Stats row */}
-          <div className="flex items-center justify-center gap-6 p-2 bg-white rounded-lg shadow-sm mb-2">
+          {/* Stats Section */}
+          <div className={`flex ${isLandscape ? 'flex-row' : 'flex-nowrap overflow-x-auto'} items-center justify-start gap-4 p-2 bg-white rounded-lg shadow-sm mb-2`}>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Algorithm:</span>
               <span className="text-sm font-medium">
@@ -254,45 +275,30 @@ const PathfindingVisualizer = () => {
               <span className="text-sm text-gray-600">Time:</span>
               <span className="text-sm font-medium">{isRunning ? "..." : `${stats.executionTime || 0}ms`}</span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Memory:</span>
-              <span className="text-sm font-medium">{isRunning ? "..." : `${stats.memoryUsed || 0}`}</span>
-            </div>
-            <div className="h-4 w-px bg-gray-200" />
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Manhattan:</span>
-              <span className="text-sm font-medium">{isRunning ? "..." : stats.manhattanDistance || 0}</span>
-            </div>
           </div>
 
-          {/* Legend row */}
-          <div className="flex items-center justify-center gap-6 p-2 bg-white rounded-lg shadow-sm mb-2">
+          {/* Legend Section */}
+          <div className="flex flex-wrap items-center justify-center gap-4 p-2 bg-white rounded-lg shadow-sm mb-2">
             <div className="flex items-center gap-2">
-              <div style={{ width: '16px', height: '16px', backgroundColor: '#22c55e' }} className="rounded-sm" />
+              <div className="w-4 h-4 bg-green-500 rounded-sm" />
               <span className="text-sm text-gray-700">Start</span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
             <div className="flex items-center gap-2">
-              <div style={{ width: '16px', height: '16px', backgroundColor: '#ef4444' }} className="rounded-sm" />
+              <div className="w-4 h-4 bg-red-500 rounded-sm" />
               <span className="text-sm text-gray-700">End</span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
             <div className="flex items-center gap-2">
-              <div style={{ width: '16px', height: '16px', backgroundColor: '#1f2937' }} className="rounded-sm" />
+              <div className="w-4 h-4 bg-gray-900 rounded-sm" />
               <span className="text-sm text-gray-700">Wall</span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
             <div className="flex items-center gap-2">
-              <div style={{ width: '16px', height: '16px', backgroundColor: '#60a5fa' }} className="rounded-sm" />
+              <div className="w-4 h-4 bg-blue-400 rounded-sm" />
               <span className="text-sm text-gray-700">Visited</span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
             <div className="flex items-center gap-2">
-              <div style={{ width: '16px', height: '16px', backgroundColor: '#facc15' }} className="rounded-sm" />
+              <div className="w-4 h-4 bg-yellow-400 rounded-sm" />
               <span className="text-sm text-gray-700">Path</span>
             </div>
-            <div className="h-4 w-px bg-gray-200" />
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700">Speed:</span>
               <select
@@ -309,13 +315,14 @@ const PathfindingVisualizer = () => {
             </div>
           </div>
 
-          {/* Grid */}
-          <div className="flex justify-center">
+          {/* Grid Section */}
+          <div className={`flex justify-center ${isLandscape ? 'w-full' : 'h-full'}`}>
             <Grid
                 grid={grid}
                 onMouseDown={handleMouseDown}
                 onMouseEnter={handleMouseEnter}
                 onMouseUp={handleMouseUp}
+                isLandscape={isLandscape}
             />
           </div>
         </main>
