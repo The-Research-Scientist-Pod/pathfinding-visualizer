@@ -184,14 +184,6 @@ const PathfindingVisualizer = () => {
 // PathfindingVisualizer.jsx
   return (
       <div className="min-h-screen flex flex-col">
-        {/* Logo in top-left corner */}
-        <div className="absolute top-2 left-2 w-24 h-24 opacity-70 hover:opacity-100 transition-opacity">
-          <img
-              src="https://researchdatapod.com/wp-content/uploads/2020/10/logo_transparent_background.png"
-              alt="The Research Scientist Pod Logo"
-              className="w-full h-full object-contain"
-          />
-        </div>
         <main className="flex-1 container mx-auto px-4 py-4 flex flex-col">
           {/* Main controls row */}
           <div className="flex items-center justify-center gap-4 p-2 bg-white rounded-lg shadow-sm mb-2">
