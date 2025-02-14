@@ -66,6 +66,7 @@ Ensure you have the following installed:
 ## 📖 Learn More About Pathfinding Algorithms
 
 Enhance your understanding of pathfinding with our detailed blog posts:
+
 - [Dijkstra's Algorithm](https://researchdatapod.com/dijkstras-algorithm/)
 - [A* Algorithm](https://researchdatapod.com/a-star-algorithm/)
 - [Bellman-Ford Algorithm](https://researchdatapod.com/bellman-ford-algorithm/)
@@ -102,3 +103,5 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 ---
 
 Feel free to suggest improvements or share your thoughts. Let’s make pathfinding visual, fun, and educational! 🚀🌟
+
+---
