@@ -1,6 +1,7 @@
+// Legend.jsx
 import React from 'react';
 
-const Legend = () => {
+const Legend = ({ speed, onSpeedChange }) => {
     const legendItems = [
         { color: '#22c55e', label: 'Start' },
         { color: '#ef4444', label: 'End' },
@@ -10,23 +11,29 @@ const Legend = () => {
     ];
 
     return (
-        <div className="text-sm mb-6">
-            <h2 className="text-lg font-semibold mb-2 text-gray-800">Legend</h2>
-            <div className="inline-flex items-center gap-4 px-4 py-3 bg-white rounded-lg shadow-sm">
-                {legendItems.map((item, index) => (
-                    <React.Fragment key={item.label}>
-                        {index > 0 && <div className="w-px h-4 bg-gray-200" />}
-                        <div className="flex items-center gap-2">
-                            <div
-                                style={{ width: '20px', height: '20px', backgroundColor: item.color }}
-                                className="rounded-sm"
-                            />
-                            <span className="text-gray-700">{item.label}</span>
-                        </div>
-                    </React.Fragment>
-                ))}
+        <div className="flex items-center justify-center gap-6 mb-4 p-2 bg-white rounded-lg shadow-sm">
+            {legendItems.map((item, index) => (
+                <div key={item.label} className="flex items-center gap-2">
+                    <div
+                        style={{ width: '16px', height: '16px', backgroundColor: item.color }}
+                        className="rounded-sm"
+                    />
+                    <span className="text-sm text-gray-700">{item.label}</span>
+                </div>
+            ))}
+            <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Speed:</span>
+                <select
+                    className="px-2 py-1 text-sm rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={speed}
+                    onChange={(e) => onSpeedChange(e.target.value)}
+                >
+                    <option value="veryfast">Very Fast</option>
+                    <option value="fast">Fast</option>
+                    <option value="normal">Normal</option>
+                    <option value="slow">Slow</option>
+                </select>
             </div>
-            <p className="mt-2 text-gray-600 text-sm">Click and drag to create walls</p>
         </div>
     );
 };
