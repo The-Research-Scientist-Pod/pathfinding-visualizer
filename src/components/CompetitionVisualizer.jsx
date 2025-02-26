@@ -502,6 +502,10 @@ const CompetitionVisualizer = () => {
                                 <option value={MAZE_TYPES.DIVISION}>Recursive Division</option>
                                 <option value={MAZE_TYPES.SPIRAL}>Spiral Maze</option>
                                 <option value={MAZE_TYPES.RANDOM}>Random Walls</option>
+                                <option value={MAZE_TYPES.KRUSKAL}>Kruskal's</option>
+                                <option value={MAZE_TYPES.ELLER}>Eller's</option>
+
+
                             </select>
 
                             <button

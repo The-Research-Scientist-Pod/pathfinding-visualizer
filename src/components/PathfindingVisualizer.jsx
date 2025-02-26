@@ -274,6 +274,10 @@ const PathfindingVisualizer = () => {
                 <option value={MAZE_TYPES.DIVISION}>Division</option>
                 <option value={MAZE_TYPES.SPIRAL}>Spiral</option>
                 <option value={MAZE_TYPES.RANDOM}>Random</option>
+                <option value={MAZE_TYPES.KRUSKAL}>Kruskal's</option>
+                <option value={MAZE_TYPES.ELLER}>Eller's</option>
+
+
               </select>
 
               <button
