@@ -9,6 +9,8 @@ import { getMazeGenerator, MAZE_TYPES } from '../utils/mazeGenerators';
 import Grid from './Grid';
 import Stats from './Stats';
 import Legend from './Legend';
+import audioService from "../utils/AudioService.js";
+import AudioControls from './AudioControls';
 
 const CompetitionVisualizer = () => {
     // Orientation detection
@@ -23,13 +25,13 @@ const CompetitionVisualizer = () => {
     const [isMousePressed, setIsMousePressed] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [mazeType, setMazeType] = useState(MAZE_TYPES.BACKTRACKING);
 
     // Algorithm settings
     const [algorithmLeft, setAlgorithmLeft] = useState('dijkstra');
     const [algorithmRight, setAlgorithmRight] = useState('astar');
     const [speed, setSpeed] = useState('normal');
     const [syncWalls, setSyncWalls] = useState(true);
+    const [mazeType, setMazeType] = useState(MAZE_TYPES.BACKTRACKING);
 
     // Results
     const [statsLeft, setStatsLeft] = useState({
@@ -84,6 +86,11 @@ const CompetitionVisualizer = () => {
         if (isRunning || isGenerating) return;
         setActiveGrid('left');
         const newGridLeft = getNewGridWithWallToggled(gridLeft, row, col);
+
+        // Play sound when a wall is added or removed
+        const isWallNow = newGridLeft[row][col].isWall;
+        audioService.play(isWallNow ? 'wallAdd' : 'wallRemove');
+
         setGridLeft(newGridLeft);
 
         if (syncWalls) {
@@ -97,6 +104,13 @@ const CompetitionVisualizer = () => {
     const handleMouseEnterLeft = (row, col) => {
         if (!isMousePressed || isRunning || isGenerating || activeGrid !== 'left') return;
         const newGridLeft = getNewGridWithWallToggled(gridLeft, row, col);
+
+        // Play sound for wall placement, but only if the state is actually changing
+        if (gridLeft[row][col].isWall !== newGridLeft[row][col].isWall) {
+            const isWallNow = newGridLeft[row][col].isWall;
+            audioService.play(isWallNow ? 'wallAdd' : 'wallRemove');
+        }
+
         setGridLeft(newGridLeft);
 
         if (syncWalls) {
@@ -110,6 +124,11 @@ const CompetitionVisualizer = () => {
         if (isRunning || isGenerating) return;
         setActiveGrid('right');
         const newGridRight = getNewGridWithWallToggled(gridRight, row, col);
+
+        // Play sound when a wall is added or removed
+        const isWallNow = newGridRight[row][col].isWall;
+        audioService.play(isWallNow ? 'wallAdd' : 'wallRemove');
+
         setGridRight(newGridRight);
 
         if (syncWalls) {
@@ -123,6 +142,13 @@ const CompetitionVisualizer = () => {
     const handleMouseEnterRight = (row, col) => {
         if (!isMousePressed || isRunning || isGenerating || activeGrid !== 'right') return;
         const newGridRight = getNewGridWithWallToggled(gridRight, row, col);
+
+        // Play sound for wall placement, but only if the state is actually changing
+        if (gridRight[row][col].isWall !== newGridRight[row][col].isWall) {
+            const isWallNow = newGridRight[row][col].isWall;
+            audioService.play(isWallNow ? 'wallAdd' : 'wallRemove');
+        }
+
         setGridRight(newGridRight);
 
         if (syncWalls) {
@@ -149,6 +175,10 @@ const CompetitionVisualizer = () => {
                     };
                     return newGrid;
                 });
+
+                // Play position-based sound for each visited node (left grid)
+                audioService.playVisitSound(node.row, node.col, GRID_SETTINGS.COLS, 'left');
+
                 resolve();
             }, visit);
         });
@@ -167,6 +197,10 @@ const CompetitionVisualizer = () => {
                     };
                     return newGrid;
                 });
+
+                // Play position-based sound for each visited node (right grid)
+                audioService.playVisitSound(node.row, node.col, GRID_SETTINGS.COLS, 'right');
+
                 resolve();
             }, visit);
         });
@@ -189,6 +223,12 @@ const CompetitionVisualizer = () => {
                         }
                         return newGrid;
                     });
+
+                    // Play path sound less frequently in competition mode
+                    if (i % 6 === 0) {
+                        audioService.playPathSound(i, nodesInPath.length, 'left');
+                    }
+
                     resolve();
                 }, path);
             });
@@ -212,6 +252,12 @@ const CompetitionVisualizer = () => {
                         }
                         return newGrid;
                     });
+
+                    // Play path sound less frequently in competition mode
+                    if (i % 6 === 0) {
+                        audioService.playPathSound(i, nodesInPath.length, 'right');
+                    }
+
                     resolve();
                 }, path);
             });
@@ -221,10 +267,12 @@ const CompetitionVisualizer = () => {
     // Grid manipulation functions
     const handleSpeedChange = (newSpeed) => {
         setSpeed(newSpeed);
+        audioService.play('click');
     };
 
     const resetGrids = useCallback(() => {
         if (isRunning || isGenerating) return;
+        audioService.play('reset');
         setGridLeft(getInitialGrid());
         setGridRight(getInitialGrid());
         setStatsLeft({
@@ -250,6 +298,7 @@ const CompetitionVisualizer = () => {
 
     const clearPaths = () => {
         if (isRunning || isGenerating) return;
+        audioService.play('click');
 
         // Clear left grid paths
         setGridLeft(grid =>
@@ -288,6 +337,7 @@ const CompetitionVisualizer = () => {
 
     const generateMazes = async () => {
         if (isRunning || isGenerating) return;
+        audioService.play('click');
         resetGrids();
         setIsGenerating(true);
 
@@ -300,8 +350,11 @@ const CompetitionVisualizer = () => {
                 mazeGenerator(gridLeft, setGridLeft),
                 mazeGenerator(gridRight, setGridRight)
             ]);
+
+            audioService.play('success');
         } catch (error) {
             console.error('Error generating mazes:', error);
+            audioService.play('failure');
         } finally {
             setIsGenerating(false);
         }
@@ -309,12 +362,14 @@ const CompetitionVisualizer = () => {
 
     const copyMazeLeftToRight = () => {
         if (isRunning || isGenerating) return;
+        audioService.play('switch');
         setGridRight(gridLeft.map(row => row.map(node => ({ ...node }))));
         clearPaths();
     };
 
     const copyMazeRightToLeft = () => {
         if (isRunning || isGenerating) return;
+        audioService.play('switch');
         setGridLeft(gridRight.map(row => row.map(node => ({ ...node }))));
         clearPaths();
     };
@@ -333,6 +388,7 @@ const CompetitionVisualizer = () => {
     const compareAlgorithms = async () => {
         if (isRunning || isGenerating) return;
         clearPaths();
+        audioService.play('click');
         setIsRunning(true);
         setWinner(null);
 
@@ -366,23 +422,33 @@ const CompetitionVisualizer = () => {
             if (leftPath.length && rightPath.length) {
                 if (leftPath.length < rightPath.length) {
                     setWinner('left');
+                    audioService.play('winLeft');
                 } else if (rightPath.length < leftPath.length) {
                     setWinner('right');
+                    audioService.play('winRight');
                 } else if (leftResult.stats.executionTime < rightResult.stats.executionTime) {
                     setWinner('left');
+                    audioService.play('winLeft');
                 } else if (rightResult.stats.executionTime < leftResult.stats.executionTime) {
                     setWinner('right');
+                    audioService.play('winRight');
                 } else {
                     setWinner('tie');
+                    audioService.play('tie');
                 }
             } else if (leftPath.length) {
                 setWinner('left');
+                audioService.play('winLeft');
             } else if (rightPath.length) {
                 setWinner('right');
+                audioService.play('winRight');
+            } else {
+                audioService.play('failure');
             }
 
         } catch (error) {
             console.error('Error during algorithm comparison:', error);
+            audioService.play('failure');
         } finally {
             setIsRunning(false);
         }
@@ -462,6 +528,8 @@ const CompetitionVisualizer = () => {
                         >
                             Reset
                         </button>
+
+                        <AudioControls />
                     </div>
                 </div>
 

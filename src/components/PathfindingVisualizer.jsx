@@ -9,6 +9,8 @@ import { getMazeGenerator, MAZE_TYPES } from '../utils/mazeGenerators';
 import Grid from './Grid';
 import Legend from './Legend';
 import Stats from './Stats';
+import  audioService  from '../utils/AudioService';
+import AudioControls from './AudioControls';
 
 const PathfindingVisualizer = () => {
   // Orientation detection
@@ -61,6 +63,11 @@ const PathfindingVisualizer = () => {
   const handleMouseDown = (row, col) => {
     if (isRunning || isGenerating) return;
     const newGrid = getNewGridWithWallToggled(grid, row, col);
+
+    // Play sound when a wall is added or removed
+    const isWallNow = newGrid[row][col].isWall;
+    audioService.play(isWallNow ? 'wallAdd' : 'wallRemove');
+
     setGrid(newGrid);
     setIsMousePressed(true);
   };
@@ -68,6 +75,13 @@ const PathfindingVisualizer = () => {
   const handleMouseEnter = (row, col) => {
     if (!isMousePressed || isRunning || isGenerating) return;
     const newGrid = getNewGridWithWallToggled(grid, row, col);
+
+    // Play sound for wall placement, but only if the state is actually changing
+    if (grid[row][col].isWall !== newGrid[row][col].isWall) {
+      const isWallNow = newGrid[row][col].isWall;
+      audioService.play(isWallNow ? 'wallAdd' : 'wallRemove');
+    }
+
     setGrid(newGrid);
   };
 
@@ -88,6 +102,10 @@ const PathfindingVisualizer = () => {
           };
           return newGrid;
         });
+
+        // Play position-based sound for each visited node
+        audioService.playVisitSound(node.row, node.col, GRID_SETTINGS.COLS);
+
         resolve();
       }, visit);
     });
@@ -110,6 +128,10 @@ const PathfindingVisualizer = () => {
             }
             return newGrid;
           });
+
+          // Play path sound based on the progress through the path
+          audioService.playPathSound(i, nodesInPath.length);
+
           resolve();
         }, path);
       });
@@ -119,10 +141,12 @@ const PathfindingVisualizer = () => {
   // Grid manipulation functions
   const handleSpeedChange = (newSpeed) => {
     setSpeed(newSpeed);
+    audioService.play('click');
   };
 
   const resetGrid = useCallback(() => {
     if (isRunning || isGenerating) return;
+    audioService.play('reset');
     setGrid(getInitialGrid());
     setStats({
       algorithm: algorithm,
@@ -137,6 +161,7 @@ const PathfindingVisualizer = () => {
 
   const clearPath = () => {
     if (isRunning || isGenerating) return;
+    audioService.play('click');
     setGrid(grid =>
         grid.map(row =>
             row.map(node => ({
@@ -155,6 +180,7 @@ const PathfindingVisualizer = () => {
 
   const generateMaze = async () => {
     if (isRunning || isGenerating) return;
+    audioService.play('click');
     setGrid(getInitialGrid());
     setIsGenerating(true);
     try {
@@ -162,8 +188,10 @@ const PathfindingVisualizer = () => {
       await mazeGenerator(grid, setGrid);
     } catch (error) {
       console.error('Error generating maze:', error);
+      audioService.play('failure');
     } finally {
       setIsGenerating(false);
+      audioService.play('success');
     }
   };
 
@@ -181,6 +209,7 @@ const PathfindingVisualizer = () => {
   const visualize = async () => {
     if (isRunning || isGenerating) return;
     clearPath();
+    audioService.play('click');
     setIsRunning(true);
 
     try {
@@ -191,13 +220,25 @@ const PathfindingVisualizer = () => {
 
       if (visitedNodesInOrder.length > 0) {
         const { FINISH_NODE_ROW, FINISH_NODE_COL } = GRID_SETTINGS;
+        const path = getNodesInShortestPath(grid[FINISH_NODE_ROW][FINISH_NODE_COL]);
+
         await animatePath(
             visitedNodesInOrder,
-            getNodesInShortestPath(grid[FINISH_NODE_ROW][FINISH_NODE_COL])
+            path
         );
+
+        // Play success sound if path was found, failure sound if not
+        if (path.length > 0) {
+          audioService.play('success');
+        } else {
+          audioService.play('failure');
+        }
+      } else {
+        audioService.play('failure');
       }
     } catch (error) {
       console.error('Error during visualization:', error);
+      audioService.play('failure');
     } finally {
       setIsRunning(false);
     }
@@ -259,6 +300,8 @@ const PathfindingVisualizer = () => {
             >
               Reset
             </button>
+
+            <AudioControls />
           </div>
 
           {/* Stats Section */}

@@ -1,4 +1,5 @@
 import { GRID_SETTINGS } from './gridUtils';
+import audioService from './AudioService';
 
 export const MAZE_TYPES = {
     BACKTRACKING: 'backtracking',
@@ -37,6 +38,28 @@ const batchAnimateCells = async (cells, setGrid) => {
         });
         return newGrid;
     });
+
+    // Play a sound when carving paths through the maze
+    if (cells.length > 0 && audioService.isEnabled) {
+        // Use frequency based on position in grid for musicality
+        const middleCell = cells[Math.floor(cells.length / 2)];
+        if (middleCell) {
+            const note = middleCell.row % 8; // Use 8 different notes (octave)
+            const baseFreq = 220; // A3
+            const freq = baseFreq * Math.pow(2, note / 12); // Convert to frequency
+
+            const tempSound = {
+                soundType: 'oscillator',
+                oscillatorType: 'sine',
+                frequency: freq,
+                duration: 0.2,
+                volume: 0.1
+            };
+
+            audioService.playOscillator(tempSound);
+        }
+    }
+
     await delay(1); // Minimal delay for visual feedback
 };
 
@@ -111,6 +134,8 @@ export const backtrackingMaze = async (grid, setGrid, setIsGenerating) => {
         setIsGenerating(true);
     }
 
+    audioService.play('switch'); // Play sound when starting maze generation
+
     try {
         const newGrid = initializeMazeGrid(grid);
         const startRow = 1;
@@ -125,8 +150,10 @@ export const backtrackingMaze = async (grid, setGrid, setIsGenerating) => {
         newGrid[FINISH_NODE_ROW][FINISH_NODE_COL].isWall = false;
 
         setGrid([...newGrid]);
+        audioService.play('success'); // Play success sound when maze is complete
     } catch (error) {
         console.error('Maze generation error:', error);
+        audioService.play('failure'); // Play failure sound if there's an error
     } finally {
         if (setIsGenerating) {
             setIsGenerating(false);
@@ -139,6 +166,8 @@ export const primsMaze = async (grid, setGrid, setIsGenerating) => {
     if (setIsGenerating) {
         setIsGenerating(true);
     }
+
+    audioService.play('switch'); // Play sound when starting maze generation
 
     try {
         // Initialize a grid filled with walls
@@ -259,8 +288,10 @@ export const primsMaze = async (grid, setGrid, setIsGenerating) => {
         }))));
 
         setGrid([...newGrid]);
+        audioService.play('success'); // Play success sound when maze is complete
     } catch (error) {
         console.error('Prim\'s maze generation error:', error);
+        audioService.play('failure'); // Play failure sound if there's an error
     } finally {
         if (setIsGenerating) {
             setIsGenerating(false);
@@ -273,6 +304,8 @@ export const recursiveDivisionMaze = async (grid, setGrid, setIsGenerating) => {
     if (setIsGenerating) {
         setIsGenerating(true);
     }
+
+    audioService.play('switch'); // Play sound when starting maze generation
 
     try {
         // Start with an empty grid (no walls)
@@ -366,6 +399,23 @@ export const recursiveDivisionMaze = async (grid, setGrid, setIsGenerating) => {
                 return gridCopy;
             });
 
+            // Play sound when placing a wall segment
+            if (wallCells.length > 0) {
+                const wallNote = horizontal ? 10 : 15; // Different notes for horizontal vs vertical walls
+                const baseFreq = 200;
+                const freq = baseFreq * Math.pow(2, wallNote / 24); // Quarter-tones for variety
+
+                const tempSound = {
+                    soundType: 'oscillator',
+                    oscillatorType: 'sine',
+                    frequency: freq,
+                    duration: 0.2,
+                    volume: 0.1
+                };
+
+                audioService.playOscillator(tempSound);
+            }
+
             await delay(30);
 
             // recursively divide the chambers created by the new wall
@@ -390,8 +440,10 @@ export const recursiveDivisionMaze = async (grid, setGrid, setIsGenerating) => {
         newGrid[FINISH_NODE_ROW][FINISH_NODE_COL].isWall = false;
 
         setGrid([...newGrid]);
+        audioService.play('success'); // Play success sound when maze is complete
     } catch (error) {
         console.error('Recursive division maze generation error:', error);
+        audioService.play('failure'); // Play failure sound if there's an error
     } finally {
         if (setIsGenerating) {
             setIsGenerating(false);
@@ -404,6 +456,8 @@ export const spiralMaze = async (grid, setGrid, setIsGenerating) => {
     if (setIsGenerating) {
         setIsGenerating(true);
     }
+
+    audioService.play('switch'); // Play sound when starting maze generation
 
     try {
         // Start with an empty grid
@@ -456,6 +510,21 @@ export const spiralMaze = async (grid, setGrid, setIsGenerating) => {
                 });
                 return gridCopy;
             });
+
+            // Play a spiral sound based on radius
+            const baseFreq = 200;
+            const note = (radius / 2) % 12; // Cycle through an octave
+            const freq = baseFreq * Math.pow(2, note / 12);
+
+            const tempSound = {
+                soundType: 'oscillator',
+                oscillatorType: 'sine',
+                frequency: freq,
+                duration: 0.2,
+                volume: 0.1
+            };
+
+            audioService.playOscillator(tempSound);
 
             await delay(50);
 
@@ -522,9 +591,14 @@ export const spiralMaze = async (grid, setGrid, setIsGenerating) => {
             newGrid[row][col].isWall = false;
         });
 
+        // Animate the path creation
+        await batchAnimateCells([...pathFromStart, ...pathFromEnd], setGrid);
+
         setGrid([...newGrid]);
+        audioService.play('success'); // Play success sound when maze is complete
     } catch (error) {
         console.error('Spiral maze generation error:', error);
+        audioService.play('failure'); // Play failure sound if there's an error
     } finally {
         if (setIsGenerating) {
             setIsGenerating(false);
@@ -537,6 +611,8 @@ export const randomMaze = async (grid, setGrid, setIsGenerating, density = 0.3) 
     if (setIsGenerating) {
         setIsGenerating(true);
     }
+
+    audioService.play('switch'); // Play sound when starting maze generation
 
     try {
         // Create a grid with random walls
@@ -622,10 +698,30 @@ export const randomMaze = async (grid, setGrid, setIsGenerating, density = 0.3) 
                 return gridCopy;
             });
 
+            // Play randomized sound for each chunk
+            if (i % (chunkSize * 4) === 0) { // Play sound less frequently
+                const chunkNote = Math.floor(Math.random() * 12);
+                const baseFreq = 300;
+                const freq = baseFreq * Math.pow(2, chunkNote / 12);
+
+                const tempSound = {
+                    soundType: 'oscillator',
+                    oscillatorType: 'sine',
+                    frequency: freq,
+                    duration: 0.2,
+                    volume: 0.1
+                };
+
+                audioService.playOscillator(tempSound);
+            }
+
             await delay(10);
         }
+
+        audioService.play('success'); // Play success sound when maze is complete
     } catch (error) {
         console.error('Random maze generation error:', error);
+        audioService.play('failure'); // Play failure sound if there's an error
     } finally {
         if (setIsGenerating) {
             setIsGenerating(false);
