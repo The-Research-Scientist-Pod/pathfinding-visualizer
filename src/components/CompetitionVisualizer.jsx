@@ -5,6 +5,7 @@ import { astar } from '../algorithms/astar';
 import { breadthFirstSearch } from '../algorithms/breadthFirst';
 import { depthFirstSearch } from '../algorithms/depthFirst';
 import { bellmanFord } from '../algorithms/bellmanFord';
+import { bidirectionalSearch } from "../algorithms/bidirectional";
 import { getMazeGenerator, MAZE_TYPES } from '../utils/mazeGenerators';
 import Grid from './Grid';
 import Stats from './Stats';
@@ -381,6 +382,8 @@ const CompetitionVisualizer = () => {
             case 'bfs': return breadthFirstSearch;
             case 'dfs': return depthFirstSearch;
             case 'bellmanFord': return bellmanFord;
+            case 'bidirectional': return bidirectionalSearch;
+
             default: return dijkstra;
         }
     };
@@ -471,6 +474,8 @@ const CompetitionVisualizer = () => {
                             <option value="bfs">BFS</option>
                             <option value="dfs">DFS</option>
                             <option value="bellmanFord">Bellman-Ford</option>
+                            <option value="bidirectional">Bidirectional</option>
+
                         </select>
 
                         <span className="font-bold">VS</span>
@@ -486,6 +491,8 @@ const CompetitionVisualizer = () => {
                             <option value="bfs">BFS</option>
                             <option value="dfs">DFS</option>
                             <option value="bellmanFord">Bellman-Ford</option>
+                            <option value="bidirectional">Bidirectional</option>
+
                         </select>
                     </div>
 

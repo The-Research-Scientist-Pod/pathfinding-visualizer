@@ -5,6 +5,8 @@ import { astar } from '../algorithms/astar';
 import { breadthFirstSearch } from '../algorithms/breadthFirst';
 import { depthFirstSearch } from '../algorithms/depthFirst';
 import { bellmanFord } from '../algorithms/bellmanFord';
+import { bidirectionalSearch } from "../algorithms/bidirectional";
+
 import { getMazeGenerator, MAZE_TYPES } from '../utils/mazeGenerators';
 import Grid from './Grid';
 import Legend from './Legend';
@@ -202,6 +204,8 @@ const PathfindingVisualizer = () => {
       case 'bfs': return breadthFirstSearch;
       case 'dfs': return depthFirstSearch;
       case 'bellmanFord': return bellmanFord;
+      case 'bidirectional': return bidirectionalSearch;
+
       default: return dijkstra;
     }
   };
@@ -260,10 +264,12 @@ const PathfindingVisualizer = () => {
               <option value="bfs">BFS</option>
               <option value="dfs">DFS</option>
               <option value="bellmanFord">Bellman-Ford</option>
+              <option value="bidirectional">Bidirectional</option>
+
             </select>
 
             <div className="flex items-center gap-2">
-              <select
+            <select
                   className="px-2 py-1 text-sm rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={mazeType}
                   onChange={(e) => setMazeType(e.target.value)}
