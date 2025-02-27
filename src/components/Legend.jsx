@@ -1,4 +1,3 @@
-// Legend.jsx
 import React from 'react';
 
 const Legend = ({ speed, onSpeedChange }) => {
@@ -11,20 +10,25 @@ const Legend = ({ speed, onSpeedChange }) => {
     ];
 
     return (
-        <div className="flex items-center justify-center gap-6 mb-4 p-2 bg-white rounded-lg shadow-sm">
-            {legendItems.map((item, index) => (
-                <div key={item.label} className="flex items-center gap-2">
-                    <div
-                        style={{ width: '16px', height: '16px', backgroundColor: item.color }}
-                        className="rounded-sm"
-                    />
-                    <span className="text-sm text-gray-700">{item.label}</span>
-                </div>
-            ))}
-            <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700">Speed:</span>
+        <div className="mb-2 p-1 bg-white rounded-lg shadow-sm">
+            {/* First row - legend items in a wrap container */}
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-1">
+                {legendItems.map((item) => (
+                    <div key={item.label} className="flex items-center gap-1">
+                        <div
+                            style={{ width: '12px', height: '12px', backgroundColor: item.color }}
+                            className="rounded-sm"
+                        />
+                        <span className="text-xs sm:text-sm text-gray-700">{item.label}</span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Second row - speed selector */}
+            <div className="flex items-center justify-center">
+                <span className="text-xs sm:text-sm text-gray-700 mr-1">Speed:</span>
                 <select
-                    className="px-2 py-1 text-sm rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-1 py-0.5 text-xs sm:text-sm rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     value={speed}
                     onChange={(e) => onSpeedChange(e.target.value)}
                 >
