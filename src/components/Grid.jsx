@@ -1,38 +1,49 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { GRID_SETTINGS } from '../utils/gridUtils';
+import { useWindowSize } from '../hooks/useWindowSize'; // Import the custom hook
 
 const Grid = ({ grid, onMouseDown, onMouseEnter, onMouseUp, isLandscape }) => {
-    const [cellSize, setCellSize] = useState(25);
+    const [cellSize, setCellSize] = useState(8); // Start with a smaller default
     const [touchStarted, setTouchStarted] = useState(false);
+    const windowSize = useWindowSize(); // Use the window size hook
 
     const calculateCellSize = useCallback(() => {
         // Get viewport dimensions
-        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-        const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+        const vw = windowSize.width || document.documentElement.clientWidth || 0;
+        const vh = windowSize.height || document.documentElement.clientHeight || 0;
 
-        // Much larger margins and header space for mobile
-        const headerHeight = isLandscape ? 180 : 280; // Increased header space
-        const SIDE_MARGIN = isLandscape ? 40 : 32;
+        // Dynamic header height based on screen size and content
+        const headerHeight = isLandscape ? 220 : 320;
 
-        // Calculate available space with larger margins
-        const availableWidth = vw - (SIDE_MARGIN * 2);
-        const availableHeight = vh - headerHeight - (SIDE_MARGIN * 2);
+        // Use smaller margins on small screens
+        const sideMargin = Math.min(20, Math.max(8, vw * 0.02));
+
+        // Calculate available space
+        const availableWidth = vw - (sideMargin * 2);
+        // In landscape, account for two grids side by side with gap
+        const effectiveWidth = isLandscape ? (availableWidth * 0.47) : availableWidth;
+        const availableHeight = vh - headerHeight - (sideMargin * 2);
 
         // Calculate cell size ensuring grid fits in available space
-        const widthBasedSize = (availableWidth * 0.95) / GRID_SETTINGS.COLS; // 95% of available width
-        const heightBasedSize = (availableHeight * 0.95) / GRID_SETTINGS.ROWS; // 95% of available height
+        const widthBasedSize = (effectiveWidth * 0.95) / GRID_SETTINGS.COLS;
+        const heightBasedSize = (availableHeight * 0.92) / GRID_SETTINGS.ROWS;
 
-        // Use the smaller value and enforce size limits
+        // Use the smaller value to ensure the grid fits
         let size = Math.min(widthBasedSize, heightBasedSize);
 
-        // Stricter size limits for mobile
-        const maxSize = isLandscape ? 20 : 12;
-        const minSize = isLandscape ? 10 : 6;
+        // Much stricter max size limit to prevent cells from growing too large on bigger screens
+        // This will help prevent grid overlap issues
+        const maxSize = Math.min(12, Math.max(8, vw * 0.008));
 
+        // Smaller min size for small screens
+        const minSize = vw < 640 ? 3 : (isLandscape ? 4 : 3);
+
+        // Round down to avoid overflow
         return Math.floor(Math.max(minSize, Math.min(size, maxSize)));
-    }, [isLandscape]);
+    }, [isLandscape, windowSize]);
 
     useEffect(() => {
+        // Update cell size when window size or orientation changes
         const handleResize = () => {
             requestAnimationFrame(() => {
                 setCellSize(calculateCellSize());
@@ -40,19 +51,17 @@ const Grid = ({ grid, onMouseDown, onMouseEnter, onMouseUp, isLandscape }) => {
         };
 
         handleResize();
+
+        // We're already handling resize through the hook, but keep this for immediate updates
         window.addEventListener('resize', handleResize);
-        window.addEventListener('orientationchange', () => {
-            setTimeout(handleResize, 100);
-        });
 
         return () => {
             window.removeEventListener('resize', handleResize);
-            window.removeEventListener('orientationchange', handleResize);
         };
-    }, [calculateCellSize]);
+    }, [calculateCellSize, windowSize]);
 
     const getNodeClassName = (node) => {
-        const baseClasses = "transition-colors duration-200";
+        const baseClasses = "transition-colors duration-100"; // Faster transition
 
         if (node.isFinish) return `${baseClasses} bg-red-500`;
         if (node.isStart) return `${baseClasses} bg-green-500`;
@@ -91,16 +100,16 @@ const Grid = ({ grid, onMouseDown, onMouseEnter, onMouseUp, isLandscape }) => {
     };
 
     return (
-        <div className="w-full flex justify-center items-center px-5 py-5">
+        <div className="w-full flex justify-center items-center p-1">
             <div
                 style={{
                     display: 'grid',
                     gridTemplateColumns: `repeat(${GRID_SETTINGS.COLS}, ${cellSize}px)`,
                     gap: '1px',
-                    padding: '4px',
+                    padding: '2px',
                     backgroundColor: '#e5e7eb',
-                    border: '2px solid #d1d5db',
-                    borderRadius: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
                     touchAction: 'none',
                     WebkitTouchCallout: 'none',
                     WebkitUserSelect: 'none',
@@ -108,7 +117,7 @@ const Grid = ({ grid, onMouseDown, onMouseEnter, onMouseUp, isLandscape }) => {
                     msUserSelect: 'none',
                     userSelect: 'none',
                 }}
-                className="shadow-lg"
+                className="shadow-md"
             >
                 {grid.map((row, rowIdx) =>
                     row.map((node, nodeIdx) => (

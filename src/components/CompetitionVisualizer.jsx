@@ -456,7 +456,7 @@ const CompetitionVisualizer = () => {
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
-            <main className="flex-1 container mx-auto px-2 py-2 flex flex-col">
+            <main className="flex-1 container mx-auto px-1 py-1 flex flex-col max-h-screen overflow-auto">
                 {/* Controls Section */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-2 bg-white rounded-lg shadow-sm mb-2">
                     <div className="flex flex-wrap gap-2 items-center justify-center">
@@ -504,8 +504,6 @@ const CompetitionVisualizer = () => {
                                 <option value={MAZE_TYPES.RANDOM}>Random Walls</option>
                                 <option value={MAZE_TYPES.KRUSKAL}>Kruskal's</option>
                                 <option value={MAZE_TYPES.ELLER}>Eller's</option>
-
-
                             </select>
 
                             <button
@@ -611,25 +609,33 @@ const CompetitionVisualizer = () => {
 
                 <Legend speed={speed} onSpeedChange={handleSpeedChange} />
 
-                {/* Grid Section */}
-                <div className={`flex ${isLandscape ? 'flex-row' : 'flex-col'} justify-center gap-4`}>
-                    <div className={`flex-1 ${winner === 'left' ? 'border-4 border-green-500 rounded-lg' : ''}`}>
-                        <Grid
-                            grid={gridLeft}
-                            onMouseDown={handleMouseDownLeft}
-                            onMouseEnter={handleMouseEnterLeft}
-                            onMouseUp={handleMouseUp}
-                            isLandscape={isLandscape}
-                        />
-                    </div>
-                    <div className={`flex-1 ${winner === 'right' ? 'border-4 border-blue-500 rounded-lg' : ''}`}>
-                        <Grid
-                            grid={gridRight}
-                            onMouseDown={handleMouseDownRight}
-                            onMouseEnter={handleMouseEnterRight}
-                            onMouseUp={handleMouseUp}
-                            isLandscape={isLandscape}
-                        />
+                {/* Grid Section - Fixed with consistent spacing and size constraints */}
+                <div className="flex-1 overflow-auto min-h-0 p-2">
+                    <div className={`flex ${isLandscape ? 'flex-row justify-between' : 'flex-col'} items-center`}>
+                        <div
+                            className={`${isLandscape ? 'w-[46%]' : 'w-full mb-4'} ${winner === 'left' ? 'border-2 border-green-500 rounded-lg' : ''}`}
+                            style={{ maxWidth: isLandscape ? 'calc(46vw - 2rem)' : 'none' }}
+                        >
+                            <Grid
+                                grid={gridLeft}
+                                onMouseDown={handleMouseDownLeft}
+                                onMouseEnter={handleMouseEnterLeft}
+                                onMouseUp={handleMouseUp}
+                                isLandscape={isLandscape}
+                            />
+                        </div>
+                        <div
+                            className={`${isLandscape ? 'w-[46%]' : 'w-full'} ${winner === 'right' ? 'border-2 border-blue-500 rounded-lg' : ''}`}
+                            style={{ maxWidth: isLandscape ? 'calc(46vw - 2rem)' : 'none' }}
+                        >
+                            <Grid
+                                grid={gridRight}
+                                onMouseDown={handleMouseDownRight}
+                                onMouseEnter={handleMouseEnterRight}
+                                onMouseUp={handleMouseUp}
+                                isLandscape={isLandscape}
+                            />
+                        </div>
                     </div>
                 </div>
             </main>
